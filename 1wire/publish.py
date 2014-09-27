@@ -73,6 +73,7 @@ class PollerThread(StoppableThread):
 class PublisherThread(StoppableThread):
 
     def __init__(self, host="test.mosquitto.org"):
+        super(PublisherThread, self).__init__()
         self.mqttc = mosquitto.Mosquitto("python_pub")
         self.mqttc.will_set("/event/dropped", "Sorry, I seem to have died.")
         self.mqttc.connect(host, 1883, 60, True)
@@ -84,7 +85,7 @@ class PublisherThread(StoppableThread):
             if ret:
                 (id, temp) = ret
                 queue.task_done()
-                mqttc.publish("iot_lab/temp", "{id}:{temp}".format(id=id, temp=temp))  
+                self.mqttc.publish("iot_lab/temp", "{id}:{temp}".format(id=id, temp=temp))  
 
 
 if __name__ == "__main__":
