@@ -7,11 +7,11 @@ import threading
 from Queue import Queue
 import mosquitto
 
-queue = Queue(10)
+queue = Queue(100)
 
-def main(host, sensors):
+def main(host, port, sensors):
     print "#######################"
-    print "Temperature poller v0.1"
+    print "Temperature poller v0.2"
     print "#######################"
 
     print "Using sensors:"
@@ -22,7 +22,7 @@ def main(host, sensors):
         p.start()
         pollers.append(p)
 
-    publisher = PublisherThread(host)
+    publisher = PublisherThread(host, port)
     publisher.start()    
 
     try:
@@ -72,11 +72,11 @@ class PollerThread(StoppableThread):
 
 class PublisherThread(StoppableThread):
 
-    def __init__(self, host="test.mosquitto.org"):
+    def __init__(self, host, port):
         super(PublisherThread, self).__init__()
         self.mqttc = mosquitto.Mosquitto("python_pub")
         self.mqttc.will_set("/event/dropped", "Sorry, I seem to have died.")
-        self.mqttc.connect(host, 1883, 60, True)
+        self.mqttc.connect(host, port, 60, True)
 
     def run(self):
         global queue
@@ -90,7 +90,8 @@ class PublisherThread(StoppableThread):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('host')
+    parser.add_argument('-h', '--host', required=True)
+    parser.add_argument('-p', '--port', default="1883")
     parser.add_argument('-s', '--sensors', default=[], nargs='+', help='path(s) to sensors, separated by space')
     args = parser.parse_args()
-    main(args.host, args.sensors)
+    main(args.host, args.port, args.sensors)
