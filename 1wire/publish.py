@@ -9,7 +9,7 @@ import mosquitto
 
 queue = Queue(100)
 
-def main(host, port, sensors):
+def main(host, port, user, password, sensors):
     print "#######################"
     print "Temperature poller v0.2"
     print "#######################"
@@ -22,7 +22,7 @@ def main(host, port, sensors):
         p.start()
         pollers.append(p)
 
-    publisher = PublisherThread(host, port)
+    publisher = PublisherThread(host, port, user=user, password=password)
     publisher.start()    
 
     try:
@@ -72,10 +72,12 @@ class PollerThread(StoppableThread):
 
 class PublisherThread(StoppableThread):
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, user=None, password=None):
         super(PublisherThread, self).__init__()
         self.mqttc = mosquitto.Mosquitto("python_pub")
         self.mqttc.will_set("/event/dropped", "Sorry, I seem to have died.")
+        if user is not None and password is not None:
+            self.mqttc.username_pw_set(user, password)
         self.mqttc.connect(host, port, 60, True)
 
     def run(self):
@@ -92,6 +94,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-H', '--host', required=True)
     parser.add_argument('-P', '--port', default="1883")
+    parser.add_argument('-u', '--user', default=None)
+    parser.add_argument('-p', '--password', default=None)
     parser.add_argument('-s', '--sensors', default=[], action='append', dest="sensors", help='path(s) to sensors, separated by space')
     args = parser.parse_args()
-    main(args.host, args.port, args.sensors)
+    main(args.host, args.port, args.user, args.password, args.sensors)
