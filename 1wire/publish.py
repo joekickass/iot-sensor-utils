@@ -90,8 +90,8 @@ class PublisherThread(StoppableThread):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-h', '--host', required=True)
-    parser.add_argument('-p', '--port', default="1883")
+    parser.add_argument('-H', '--host', required=True)
+    parser.add_argument('-P', '--port', default="1883")
     parser.add_argument('-s', '--sensors', default=[], action='append', dest="sensors", help='path(s) to sensors, separated by space')
     args = parser.parse_args()
     main(args.host, args.port, args.sensors)
